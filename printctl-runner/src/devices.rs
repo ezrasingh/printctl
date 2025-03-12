@@ -1,6 +1,5 @@
+use serial::SystemPort;
 use std::path::PathBuf;
-
-use serial_enumerator::{get_serial_list, SerialInfo};
 
 #[derive(Debug)]
 pub struct Device {
@@ -24,8 +23,8 @@ impl Device {
         &self.usb
     }
 
-    pub fn port(&self) {
-        todo!()
+    pub fn port(&self) -> Result<SystemPort, serial::Error> {
+        serial::open(self.path.as_path())
     }
 }
 
@@ -34,6 +33,8 @@ impl From<Device> for PathBuf {
         value.path
     }
 }
+
+use serial_enumerator::{get_serial_list, SerialInfo};
 
 impl From<SerialInfo> for Device {
     fn from(serial_info: SerialInfo) -> Self {
@@ -56,4 +57,15 @@ pub fn list_devices() -> Vec<Device> {
         .into_iter()
         .map(|info| Device::from(info))
         .collect()
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_system_port() {
+        let devices = list_devices();
+        println!("{:#?}", &devices);
+    }
 }
