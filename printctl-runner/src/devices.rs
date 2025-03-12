@@ -59,7 +59,7 @@ mod test {
 
     use super::*;
 
-    static DEFAULT_PRINTER: &str = "Silicon Labs";
+    static DEFAULT_PRINTER: &str = "Arduino LLC (www.arduino.cc)";
 
     fn default_printer(devices: Vec<Device>) -> Option<Device> {
         for device in devices {
