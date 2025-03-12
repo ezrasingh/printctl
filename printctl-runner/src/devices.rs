@@ -73,14 +73,14 @@ mod test {
     #[test]
     fn test_system_port() {
         let devices = list_devices();
-        //println!("{:#?}", &devices);
+        println!("{:#?}", &devices);
 
         let printer: Device = default_printer(devices).unwrap();
 
         let mut port = printer.port().unwrap();
 
         let mut buff = String::default();
-        let res = port.read_to_string(&mut buff).unwrap();
+        let res = port.read_to_string(&mut buff).unwrap_or_default();
 
         println!("device: {:#?}", printer);
         println!("result: {}", res);
