@@ -1,0 +1,8 @@
+[package]
+name = "printctl-runner"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serial = "0.4.0"
+serial_enumerator = "0.2.12"
