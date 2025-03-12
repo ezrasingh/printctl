@@ -61,11 +61,35 @@ pub fn list_devices() -> Vec<Device> {
 
 #[cfg(test)]
 mod test {
+    use std::io::Read;
+
     use super::*;
+
+    static DEFAULT_PRINTER: &str = "Silicon Labs";
+
+    fn default_printer(devices: Vec<Device>) -> Option<Device> {
+        for device in devices {
+            if device.vendor() == DEFAULT_PRINTER {
+                return Some(device);
+            }
+        }
+        None
+    }
 
     #[test]
     fn test_system_port() {
         let devices = list_devices();
-        println!("{:#?}", &devices);
+        //println!("{:#?}", &devices);
+
+        let printer: Device = default_printer(devices).unwrap();
+
+        let mut port = printer.port().unwrap();
+
+        let mut buff = String::default();
+        let res = port.read_to_string(&mut buff).unwrap();
+
+        println!("device: {:#?}", printer);
+        println!("result: {}", res);
+        println!("data: {}", buff);
     }
 }
