@@ -1,5 +1,4 @@
-use serial::SystemPort;
-use std::path::PathBuf;
+use serial::core::SerialDevice;
 
 #[derive(Debug)]
 pub struct Device {
@@ -23,7 +22,7 @@ impl Device {
         &self.usb
     }
 
-    pub fn port(&self) -> Result<SystemPort, serial::Error> {
+    pub fn port(&self) -> Result<impl SerialDevice, serial::Error> {
         serial::open(&self.path)
     }
 }
@@ -55,9 +54,8 @@ pub fn list_devices() -> Vec<Device> {
 
 #[cfg(test)]
 mod test {
-    use std::io::Read;
-
     use super::*;
+    use crate::stream::DeviceStream;
 
     static DEFAULT_PRINTER: &str = "Silicon Labs";
 
@@ -77,13 +75,9 @@ mod test {
 
         let printer: Device = default_printer(devices).unwrap();
 
-        let mut port = printer.port().unwrap();
+        let buff_capacity = std::mem::size_of::<u8>() * 100_000;
+        let stream = DeviceStream::new(printer.port().unwrap(), buff_capacity);
 
-        let mut buff = String::default();
-        let res = port.read_to_string(&mut buff).unwrap_or_default();
-
-        println!("device: {:#?}", printer);
-        println!("result: {}", res);
-        println!("data: {}", buff);
+        stream.listen().unwrap();
     }
 }
