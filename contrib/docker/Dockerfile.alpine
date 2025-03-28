@@ -1,0 +1,28 @@
+FROM rust:latest AS builder
+
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive \
+    apt-get install --no-install-recommends --assume-yes \
+    protobuf-compiler
+
+WORKDIR /pkg
+COPY . .
+
+RUN cargo build --release
+
+FROM alpine:3
+
+RUN apk add libc6-compat libgcc
+
+COPY --from=builder --chown=printctl:printctl /pkg/target/release/printctl /usr/local/bin/
+
+RUN \
+    adduser -D printctl && \
+    mkdir -p /var/lib/printctl/snapshots && \
+    chown printctl:printctl -R /var/lib/printctl
+
+USER printctl:printctl
+
+WORKDIR /var/lib/printctl
+
+ENTRYPOINT [ "printctl" ]

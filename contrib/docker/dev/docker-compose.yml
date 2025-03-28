@@ -1,0 +1,19 @@
+networks:
+    internal:
+
+services:
+    client:
+        command: list --node
+        build:
+            context: ../../../
+            dockerfile: contrib/docker/Dockerfile.alpine
+        networks:
+            - internal
+
+    server:
+        command: list --node
+        build:
+            context: ../../../
+            dockerfile: contrib/docker/Dockerfile.alpine
+        networks:
+            - internal
