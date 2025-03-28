@@ -20,15 +20,6 @@ impl<T> Node<T> {
     const MDNS_SERVICE_PORT: u16 = 8090;
     const MDNS_DEFAULT_TTL: u32 = 60;
 
-    pub fn new(name: impl Into<String>, service_addr: &Option<IpAddr>) -> Result<Node<Idle>> {
-        let node = Node {
-            name: name.into(),
-            service_addr: service_addr.unwrap_or(Self::get_local_address()?),
-            discovery: Idle,
-        };
-        Ok(node)
-    }
-
     /// retrieves the local IP address of the machine by creating a UDP socket.
     /// this method does not actually send any packets; it just determines which
     /// local IP the OS would use to reach an external address.
@@ -53,6 +44,15 @@ impl<T> Node<T> {
 }
 
 impl Node<Idle> {
+    pub fn new(name: impl Into<String>, service_addr: &Option<IpAddr>) -> Result<Self> {
+        let node = Node {
+            name: name.into(),
+            service_addr: service_addr.unwrap_or(Self::get_local_address()?),
+            discovery: Idle,
+        };
+        Ok(node)
+    }
+
     pub fn start_discovery(self) -> Node<ServiceDiscovery> {
         let instance = InstanceInformation::new(self.name.clone())
             //.with_ip_address(self.service_addr)

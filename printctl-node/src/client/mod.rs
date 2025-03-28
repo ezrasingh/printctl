@@ -1,4 +1,4 @@
-#[path = "."]
+#[path = "./"]
 pub mod grpc {
     #[path = "printctl.rs"]
     pub mod v0;

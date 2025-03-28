@@ -1,16 +1,14 @@
-use crate::prelude::*;
-
+use serde::Deserialize;
 use std::net::IpAddr;
 
-use super::mesh;
-
-pub struct Config {
+#[derive(Debug, Default, Deserialize)]
+pub struct ServerConfig {
     node_name: String,
     service_address: Option<IpAddr>,
     grpc_socket: Option<std::net::SocketAddr>,
 }
 
-impl Config {
+impl ServerConfig {
     pub fn new(
         node_name: impl Into<String>,
         service_address: Option<IpAddr>,
@@ -32,16 +30,5 @@ impl Config {
 
     pub fn grpc_socket(&self) -> &Option<std::net::SocketAddr> {
         &self.grpc_socket
-    }
-}
-
-impl TryInto<mesh::Node> for Config {
-    type Error = crate::error::Error;
-
-    fn try_into(self) -> Result<mesh::Node> {
-        use super::mesh::Idle;
-
-        let node = mesh::Node::<Idle>::new(self.node_name(), self.service_address())?;
-        Ok(node)
     }
 }
