@@ -8,6 +8,10 @@ default:
 fmt +ARGS='':
   cargo +nightly fmt {{ARGS}}
 
+# printctl CLI
+printctl +ARGS='--help':
+    cargo run -- {{ARGS}}
+
 # Sets up the basic .env file
 setup:
   #!/usr/bin/env bash
