@@ -1,20 +1,24 @@
-mod cli;
-mod command;
 mod error;
 mod prelude;
 
+mod cli;
+mod command;
+mod dashboard;
+
 use crate::prelude::*;
 
-use clap::Parser;
 use cli::Cli;
 use command::CommandRunner;
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
+    use clap::Parser;
+
     let cli = Cli::parse();
     let runner: CommandRunner = cli
         .command
         .expect("Invalid command. Please try '--help' for more information.")
         .into();
 
-    runner.run()
+    runner.run().await
 }
