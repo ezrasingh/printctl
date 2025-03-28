@@ -6,7 +6,7 @@ default:
 
 # Run cargo formatter
 fmt +ARGS='':
-  cargo +nightly fmt {{ARGS}}
+  cargo fmt {{ARGS}}
 
 # printctl CLI
 printctl +ARGS='--help':
