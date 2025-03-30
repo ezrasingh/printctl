@@ -1,7 +1,6 @@
 mod prelude;
 
-pub mod error;
-pub mod mesh;
-
 pub mod client;
+pub mod discovery;
+pub mod error;
 pub mod server;

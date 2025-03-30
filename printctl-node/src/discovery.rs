@@ -102,7 +102,7 @@ impl Node<ServiceDiscovery> {
             .get_known_services()
             .await
             .into_iter()
-            .map(|instance| Peer::from(instance.clone()))
+            .map(|instance| Peer::from(instance))
     }
 
     pub async fn stop_discovery(mut self) -> Node<Idle> {
