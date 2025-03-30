@@ -43,7 +43,6 @@ pub struct Node<T = Idle> {
 
 impl<T> Node<T> {
     const MDNS_SERVICE_NAME: &str = "_printctl._tcp.local";
-    const MDNS_SERVICE_PORT: u16 = 8090;
     const MDNS_DEFAULT_TTL: u32 = 60;
 
     pub fn name(&self) -> String {
