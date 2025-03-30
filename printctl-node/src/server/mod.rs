@@ -1,31 +1,21 @@
-mod config;
-mod devices;
-pub use config::ServerConfig;
-
-#[path = "./"]
-pub mod grpc {
-    #[path = "printctl.rs"]
-    pub mod v0;
-
-    pub use v0::printctl_server::Printctl;
-    pub use v0::printctl_server::PrintctlServer;
-}
-
 use crate::prelude::*;
 
-use simple_mdns::async_discovery::ServiceDiscovery;
-use tonic::transport::Server;
+mod api;
+mod config;
+mod devices;
+mod state;
+
+pub use config::ServerConfig;
 
 use crate::discovery;
 
-#[tonic::async_trait]
-impl grpc::Printctl for discovery::Node<ServiceDiscovery> {}
-
 #[tokio::main]
 pub async fn run(
-    server_config: ServerConfig,
+    server_config: config::ServerConfig,
     discovery_config: discovery::DiscoveryConfig,
 ) -> Result<()> {
+    use tonic::transport::Server;
+
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::DEBUG)
         .init();
@@ -34,10 +24,12 @@ pub async fn run(
     let node = discovery::Node::new(discovery_config).start_discovery();
     tracing::info!("Advertising self as: {}", node.name());
 
+    let state = state::ServerState::new(node);
+
     let addr = server_config.grpc_socket();
     tracing::info!("gRPC server listening on {}", addr);
     Server::builder()
-        .add_service(grpc::PrintctlServer::new(node))
+        .add_service(api::grpc::PrintctlServer::new(state.as_arc_mutex()))
         .serve(addr)
         .await
         .expect("could not start gRPC server");

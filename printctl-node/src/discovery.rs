@@ -1,11 +1,11 @@
 use crate::prelude::*;
 
+pub use simple_mdns::async_discovery::ServiceDiscovery;
+
 use serde::Deserialize;
 use simple_mdns::InstanceInformation;
-use simple_mdns::async_discovery::ServiceDiscovery;
 use socket2::{Domain, Protocol, Socket, Type};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
-
 #[derive(Debug, Deserialize)]
 pub struct DiscoveryConfig {
     name: String,
