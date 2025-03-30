@@ -1224,7 +1224,6 @@ dependencies = [
  "color-eyre",
  "config",
  "crossterm 0.28.1",
- "gethostname",
  "printctl-node",
  "ratatui",
  "serde",
@@ -1237,6 +1236,7 @@ dependencies = [
 name = "printctl-node"
 version = "0.1.0"
 dependencies = [
+ "gethostname",
  "prost",
  "serde",
  "simple-mdns",
