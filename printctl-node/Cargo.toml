@@ -2,6 +2,7 @@
 name = "printctl-node"
 version = "0.1.0"
 edition = "2024"
+description = "Provides server and client implementations for printctl, enabling remote management, job queuing, and command execution for 3D printers over serial interfaces."
 repository = "https://github.com/ezrasingh/printctl"
 readme = "README.md"
 license = "MIT OR Apache-2.0"

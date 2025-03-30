@@ -2,6 +2,7 @@
 name = "printctl"
 version = "0.1.0"
 edition = "2021"
+description = "A reverse proxy for serial devices over the network, purpose-built for managing 3D printing clusters at scale."
 repository = "https://github.com/ezrasingh/printctl"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
