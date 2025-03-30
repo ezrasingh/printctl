@@ -12,7 +12,7 @@ RUN cargo build --release
 
 FROM alpine:3
 
-RUN apk add libc6-compat libgcc
+RUN apk add libc6-compat libgcc protoc protobuf-dev
 
 COPY --from=builder --chown=printctl:printctl /pkg/target/release/printctl /usr/local/bin/
 
