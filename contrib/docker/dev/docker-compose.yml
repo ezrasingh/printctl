@@ -1,19 +1,18 @@
+x-base-config: &base-config
+    build:
+        context: ../../../
+        dockerfile: contrib/docker/Dockerfile.alpine
+    networks:
+        - internal
+
 networks:
     internal:
 
 services:
     client:
-        command: list --node
-        build:
-            context: ../../../
-            dockerfile: contrib/docker/Dockerfile.alpine
-        networks:
-            - internal
+        <<: *base-config
+        command: list --machines
 
     server:
-        command: list --node
-        build:
-            context: ../../../
-            dockerfile: contrib/docker/Dockerfile.alpine
-        networks:
-            - internal
+        <<: *base-config
+        command: list --machines
