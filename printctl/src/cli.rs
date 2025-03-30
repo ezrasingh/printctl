@@ -52,18 +52,8 @@ pub enum Command {
         #[arg(short, long)]
         gcode_path: PathBuf,
     },
-    /// View printer logs
-    Log {
-        /// Specify machine ID
-        #[arg(short, long)]
-        machine_id: String,
-
-        /// Specify device name
-        #[arg(short, long)]
-        device_name: String,
-    },
     /// Connect to printer
-    Connect {
+    Stream {
         /// Specify machine ID
         #[arg(short, long)]
         machine_id: String,
@@ -71,9 +61,12 @@ pub enum Command {
         /// Specify device name
         #[arg(short, long)]
         device_name: String,
+
+        #[arg(short, long, action)]
+        log: bool,
     },
     /// Start printctl server
-    Start {
+    Server {
         /// The address the server will bind to
         #[arg(short, long, env = "PRINTCTL_GRPC_ADDR")]
         addr: Option<std::net::IpAddr>,
