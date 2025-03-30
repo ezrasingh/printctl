@@ -1,4 +1,5 @@
 mod config;
+mod devices;
 pub use config::ServerConfig;
 
 #[path = "./"]
