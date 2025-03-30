@@ -1,13 +1,13 @@
 # All settings are optional; these are the default values.
+[discovery]
+# Name of the printctl node, defaults to hostname
+name = "client"
+
 [server]
 # The address the server will bind to
 grpc_addr = '0.0.0.0'
 # The port the server will listen on
 grpc_port = 50051
-
-[node]
-# Name of the printctl node, defaults to hostname
-name = "client"
 
 [ui]
 # Toggle dashboard web app

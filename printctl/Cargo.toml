@@ -4,14 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-clap = { version = "4.5.32", features = ["derive", "env", "string"] }
-config = "0.15.11"
-serde = { version = "1.0.219", features = ["derive"] }
-thiserror = "2.0.12"
-ratatui = { version = "0.29.0", features = ["all-widgets"] }
 printctl-node = { path = "../printctl-node", version = "*" }
-color-eyre = "0.6.3"
+tokio = { version = "1.44.1", features = ["macros", "rt-multi-thread"] }
+clap = { version = "4.5.32", features = ["derive", "env", "string"] }
+serde = { version = "1.0.219", features = ["derive"] }
+config = "0.15.11"
+thiserror = "2.0.12"
 crossterm = "0.28.1"
+ratatui = { version = "0.29.0", features = ["all-widgets"] }
+color-eyre = "0.6.3"
 tui = "0.19.0"
 gethostname = "1.0.1"
-tokio = { version = "1.44.1", features = ["macros", "rt-multi-thread"] }

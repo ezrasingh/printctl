@@ -1,5 +1,4 @@
 use clap::{Parser, Subcommand};
-use serde::Deserialize;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -39,6 +38,40 @@ pub enum Command {
         #[arg(short, long, action)]
         machines: bool,
     },
+    /// Submit print job
+    Print {
+        /// Specify machine ID
+        #[arg(short, long)]
+        machine_id: String,
+
+        /// Specify device name
+        #[arg(short, long)]
+        device_name: String,
+
+        /// Specify GCODE path
+        #[arg(short, long)]
+        gcode_path: PathBuf,
+    },
+    /// View printer logs
+    Log {
+        /// Specify machine ID
+        #[arg(short, long)]
+        machine_id: String,
+
+        /// Specify device name
+        #[arg(short, long)]
+        device_name: String,
+    },
+    /// Connect to printer
+    Connect {
+        /// Specify machine ID
+        #[arg(short, long)]
+        machine_id: String,
+
+        /// Specify device name
+        #[arg(short, long)]
+        device_name: String,
+    },
     /// Start printctl server
     Start {
         /// The address the server will bind to
@@ -53,9 +86,4 @@ pub enum Command {
         #[arg(short, long = "config", env = "PRINTCTL_CONFIG")]
         config_path: Option<PathBuf>,
     },
-}
-
-#[derive(Debug, Default, Deserialize)]
-pub struct PrintctlConfig {
-    pub server: Option<printctl_node::server::ServerConfig>,
 }
