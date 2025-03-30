@@ -5,8 +5,6 @@ mod ui;
 
 use crate::prelude::*;
 
-use printctl_node::discovery;
-
 fn default_config(config_path: Option<std::path::PathBuf>) -> cli::PrintctlConfig {
     use config::Config;
     config_path
@@ -51,6 +49,8 @@ async fn main() -> Result<()> {
         }
 
         cli::Command::List { devices, machines } => {
+            use printctl_node::discovery;
+
             println!("Starting discovery...");
             let discovery_node = discovery::Node::default().start_discovery();
             for peer in discovery_node.peers().await {
