@@ -80,3 +80,15 @@ pub enum Command {
         config_path: Option<PathBuf>,
     },
 }
+
+use serde::Deserialize;
+
+use crate::ui;
+use printctl_node::{discovery, server};
+
+#[derive(Debug, Default, Deserialize)]
+pub struct PrintctlConfig {
+    pub discovery: Option<discovery::DiscoveryConfig>,
+    pub server: Option<server::ServerConfig>,
+    pub ui: Option<ui::UiConfig>,
+}

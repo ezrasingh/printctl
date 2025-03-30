@@ -3,15 +3,41 @@ use crate::prelude::*;
 use socket2::{Domain, Protocol, Socket, Type};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
+use serde::Deserialize;
 use simple_mdns::InstanceInformation;
 use simple_mdns::async_discovery::ServiceDiscovery;
+
+#[derive(Debug, Deserialize)]
+pub struct DiscoveryConfig {
+    name: String,
+}
+
+impl DiscoveryConfig {
+    pub fn new(name: impl Into<String>) -> Self {
+        Self { name: name.into() }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+}
+
+impl Default for DiscoveryConfig {
+    fn default() -> Self {
+        use gethostname::gethostname;
+        let name = gethostname()
+            .into_string()
+            .expect("Could not detect hostname");
+        Self { name }
+    }
+}
 
 #[derive(Default, Clone, Copy)]
 pub struct Idle;
 
+#[derive(Default)]
 pub struct Node<T = Idle> {
-    name: String,
-    service_addr: IpAddr,
+    config: DiscoveryConfig,
     discovery: T,
 }
 
@@ -20,7 +46,11 @@ impl<T> Node<T> {
     const MDNS_SERVICE_PORT: u16 = 8090;
     const MDNS_DEFAULT_TTL: u32 = 60;
 
-    /// retrieves the local IP address of the machine by creating a UDP socket.
+    pub fn name(&self) -> String {
+        self.config.name().to_string()
+    }
+
+    /// retrieves the local IP address of the machine by creating a dummy UDP socket.
     /// this method does not actually send any packets; it just determines which
     /// local IP the OS would use to reach an external address.
     pub fn get_local_address() -> Result<IpAddr> {
@@ -44,27 +74,20 @@ impl<T> Node<T> {
 }
 
 impl Node<Idle> {
-    pub fn new(name: impl Into<String>, service_addr: &Option<IpAddr>) -> Result<Self> {
-        let node = Node {
-            name: name.into(),
-            service_addr: service_addr.unwrap_or(Self::get_local_address()?),
+    pub fn new(config: DiscoveryConfig) -> Self {
+        Self {
+            config,
             discovery: Idle,
-        };
-        Ok(node)
+        }
     }
 
     pub fn start_discovery(self) -> Node<ServiceDiscovery> {
-        let instance = InstanceInformation::new(self.name.clone())
-            //.with_ip_address(self.service_addr)
-            //.with_port(Self::MDNS_SERVICE_PORT)
-            .with_attribute(
-                env!("CARGO_PKG_NAME").to_string(),
-                Some(env!("CARGO_PKG_VERSION").to_string()),
-            );
-
+        let instance = InstanceInformation::new(self.name()).with_attribute(
+            env!("CARGO_PKG_NAME").to_string(),
+            Some(env!("CARGO_PKG_VERSION").to_string()),
+        );
         Node {
-            name: self.name,
-            service_addr: self.service_addr,
+            config: self.config,
             discovery: ServiceDiscovery::new(
                 instance,
                 Self::MDNS_SERVICE_NAME,
@@ -85,8 +108,8 @@ impl Peer {
     pub fn name(&self) -> String {
         self.service().escaped_instance_name()
     }
-    pub fn ip_addresses(&self) -> impl Iterator<Item = IpAddr> {
-        self.service().ip_addresses.clone().into_iter()
+    pub fn ip_addresses(&self) -> impl Iterator<Item = &IpAddr> {
+        self.service().ip_addresses.iter()
     }
 }
 
@@ -106,12 +129,9 @@ impl Node<ServiceDiscovery> {
     }
 
     pub async fn stop_discovery(mut self) -> Node<Idle> {
-        // Removing service from discovery
         self.discovery.remove_service_from_discovery().await;
-
         Node {
-            name: self.name,
-            service_addr: self.service_addr,
+            config: self.config,
             discovery: Idle,
         }
     }

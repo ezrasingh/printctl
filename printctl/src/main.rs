@@ -1,18 +1,24 @@
+mod cli;
 mod error;
 mod prelude;
-
-mod cli;
-mod config;
-mod dashboard;
+mod ui;
 
 use crate::prelude::*;
 
 use printctl_node::discovery;
-fn setup_client_node() -> Result<discovery::Node> {
-    use gethostname::gethostname;
-    let name = gethostname().into_string().unwrap();
-    let node = discovery::Node::new(name, &None)?;
-    Ok(node)
+
+fn default_config(config_path: Option<std::path::PathBuf>) -> cli::PrintctlConfig {
+    use config::Config;
+    config_path
+        .map(|path| {
+            Config::builder()
+                .add_source(config::File::from(path))
+                .build()
+                .unwrap()
+                .try_deserialize()
+                .unwrap_or_default()
+        })
+        .unwrap_or_default()
 }
 
 #[tokio::main]
@@ -25,7 +31,6 @@ async fn main() -> Result<()> {
         .command
         .expect("Invalid command. Please try '--help' for more information.");
     let cwd = std::env::current_dir()?;
-    let discovery_node = setup_client_node()?;
 
     match cmd {
         cli::Command::Ui {
@@ -34,34 +39,49 @@ async fn main() -> Result<()> {
             port,
             config_path,
         } => {
-            if use_web {
-                dashboard::web::start(port.unwrap_or(8080))
-                    .expect("could not start web user interface");
+            let ui_config = default_config(config_path).ui.unwrap_or_default();
+
+            if use_web || ui_config.use_web {
+                let default_port = ui_config.http_port.unwrap_or(8080);
+                let port = port.unwrap_or(default_port);
+                ui::web::start(port).expect("could not start web user interface");
             } else {
-                dashboard::tui::start().expect("could not start terminal user interface");
+                ui::tui::start().expect("could not start terminal user interface");
             }
         }
 
         cli::Command::List { devices, machines } => {
-            println!("Listening for peers...");
-            let active_node = discovery_node.start_discovery();
-            for _ in 0..20 {
-                if machines {
-                    for peer in active_node.peers().await {
-                        println!("{:#?}", peer);
-                    }
+            println!("Starting discovery...");
+            let discovery_node = discovery::Node::default().start_discovery();
+            for peer in discovery_node.peers().await {
+                if machines || devices {
+                    println!("{:#?}", peer);
                 }
-                std::thread::sleep(std::time::Duration::from_secs(1));
             }
-            println!("Ending peer discovery...");
-            active_node.stop_discovery().await;
+            println!("Ending discovery...");
+            discovery_node.stop_discovery().await;
         }
 
         cli::Command::Server {
             addr,
             port,
             config_path,
-        } => todo!(),
+        } => {
+            use printctl_node::server::ServerConfig;
+
+            let config = default_config(config_path);
+            let (server_config, discovery_config) = (
+                config.server.unwrap_or_default(),
+                config.discovery.unwrap_or_default(),
+            );
+            let (addr, port) = (
+                addr.unwrap_or(*server_config.grpc_address()),
+                port.unwrap_or(*server_config.grpc_port()),
+            );
+
+            printctl_node::server::run(ServerConfig::new(addr, port), discovery_config)
+                .expect("could not start server");
+        }
 
         cli::Command::Print {
             machine_id,
