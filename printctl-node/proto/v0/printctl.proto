@@ -24,10 +24,11 @@ message AvailableDevicesResponse {
 
 message DeviceStreamRequest {
     string device_port = 1;
+    int32 baud_rate = 2;
 };
 
 
 service Printctl {
   rpc AvailableDevices(AvailableDevicesRequest) returns (AvailableDevicesResponse) {};
-  rpc Device(DeviceStreamRequest) returns (stream DeviceEvent) {};
+  rpc DeviceConnection(DeviceStreamRequest) returns (stream DeviceEvent) {};
 }

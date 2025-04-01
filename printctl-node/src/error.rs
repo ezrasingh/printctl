@@ -4,5 +4,5 @@ pub enum Error {
     IO(#[from] std::io::Error),
 
     #[error(transparent)]
-    SerialError(#[from] serialport::Error),
+    SerialError(#[from] tokio_serial::Error),
 }
