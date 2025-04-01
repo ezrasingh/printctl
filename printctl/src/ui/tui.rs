@@ -38,9 +38,10 @@ fn render(frame: &mut Frame) {
 }
 
 fn runtime(mut terminal: DefaultTerminal) -> Result<()> {
+    let exit_hotkey = KeyEvent::new(KeyCode::Char('c'), KeyModifiers::CONTROL);
     loop {
         terminal.draw(render)?;
-        if matches!(event::read()?, Event::Key(_)) {
+        if matches!(event::read()?, Event::Key(exit_hotkey)) {
             return Ok(());
         }
     }
