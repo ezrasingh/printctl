@@ -1,29 +1,27 @@
-use crate::prelude::*;
-
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
 use super::devices::{DeviceInfo, DeviceManager, DevicePort};
 use crate::discovery;
-use crate::discovery::{Idle, ServiceDiscovery};
+use crate::discovery::ServiceDiscovery;
 
-pub type SharedState<T> = Arc<Mutex<T>>;
+pub type SharedState<T> = Mutex<T>;
 
-pub struct ServerState<T = Idle> {
-    node: discovery::Node<T>,
+pub struct ServerState<T> {
+    discovery_node: discovery::Node<T>,
     connections: HashMap<DeviceInfo, DevicePort>,
 }
 
 impl<T> ServerState<T> {
-    pub fn new(node: discovery::Node<T>) -> Self {
+    pub fn new(discovery_node: discovery::Node<T>) -> Self {
         Self {
-            node,
+            discovery_node,
             connections: HashMap::default(),
         }
     }
 
-    pub fn as_arc_mutex(self) -> SharedState<Self> {
-        Arc::new(Mutex::new(self))
+    pub fn as_mutex(self) -> SharedState<Self> {
+        Mutex::new(self)
     }
 }
 

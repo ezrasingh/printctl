@@ -29,7 +29,7 @@ pub async fn run(
     let addr = server_config.grpc_socket();
     tracing::info!("gRPC server listening on {}", addr);
     Server::builder()
-        .add_service(api::grpc::PrintctlServer::new(state.as_arc_mutex()))
+        .add_service(api::grpc::PrintctlServer::new(state.as_mutex()))
         .serve(addr)
         .await
         .expect("could not start gRPC server");
