@@ -1,8 +1,6 @@
-use crate::prelude::*;
-
 use color_eyre::Result;
 use crossterm::event;
-use crossterm::event::{Event, KeyEvent};
+use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::style::{Color, Style};
 use ratatui::text;
