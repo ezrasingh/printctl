@@ -12,8 +12,6 @@ message DeviceInfo {
 };
 
 message DeviceEvent {
-    string device_port = 1;
-    string status = 2;  // Example: "connected", "disconnected", "error"
     string message = 3;
 };
 

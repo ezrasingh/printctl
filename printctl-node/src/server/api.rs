@@ -42,28 +42,59 @@ impl grpc::Printctl for SharedState<ServerState<ServiceDiscovery>> {
     ) -> TonicResponse<Self::DeviceConnectionStream> {
         use devices::string_decoder::StringDecoder;
         use futures::{StreamExt, future::FutureExt};
-        use tokio_util::bytes::Bytes;
-        use tokio_util::codec::BytesCodec;
+        use tokio_stream::wrappers::ReceiverStream;
+        use tokio_util::codec::FramedRead;
 
         let req = request.into_inner();
         let baud_rate = req.baud_rate.try_into().unwrap();
-        let stream = self
+        let device_stream = self
             .lock()
             .unwrap()
             .create_stream(&req.device_port, baud_rate)
-            .expect("could not create serial stream");
+            .expect("could not create device stream");
 
-        let (port_rx, port_tx) = tokio::io::split(stream);
+        let (device_rx, _) = tokio::io::split(device_stream);
 
-        let mut serial_reader = tokio_util::codec::FramedRead::new(port_rx, StringDecoder::new());
-        let serial_sink = tokio_util::codec::FramedWrite::new(port_tx, BytesCodec::new());
-        let (serial_writer, serial_consumer) = futures::channel::mpsc::unbounded::<Bytes>();
+        let mut device_reader = FramedRead::new(device_rx, StringDecoder::new());
+        let (tx, rx) = tokio::sync::mpsc::channel(128);
 
         tokio::spawn(async move {
             loop {
-                let mut serial_event = serial_reader.next().fuse();
+                let serial_event = device_reader.next().fuse();
+                tokio::select! {
+                    maybe_serial = serial_event => {
+                        match maybe_serial {
+                            Some(Ok(message)) => {
+                                println!("{}", message);
+                                let device_event = grpc::v0::DeviceEvent {
+                                    message
+                                };
+                                match tx.send(Ok(device_event)).await {
+                                    Ok(_) => {
+                                        // item (server response) was queued to be send to client
+                                    },
+                                    Err(e) => {
+                                        println!("Error transmitting DeviceEvent: {:?}\r", e);
+                                        // output_stream was build from rx and both are dropped
+                                        break;
+                                    },
+                                }
+                            },
+                            Some(Err(e)) => {
+                                println!("Device serial Error: {:?}\r", e);
+                                // This most likely means that the serial port has been unplugged.
+                                break;
+                            },
+                            None => continue,
+                        }
+                    }
+                }
             }
         });
-        todo!()
+
+        let output_stream = ReceiverStream::new(rx);
+        Ok(Response::new(
+            Box::pin(output_stream) as Self::DeviceConnectionStream
+        ))
     }
 }
