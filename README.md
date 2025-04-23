@@ -3,7 +3,6 @@
 A reverse proxy for serial devices over the network, purpose-built for managing 3D printing clusters at scale.
 
 Unlike traditional solutions like OctoPrint, **printctl** is designed for effortless deployment with a **zero-config** philosophy; just fire it up, and it works.
-Built in **Rust**, it delivers rock-solid performance, enabling seamless remote management of 3D printers.
 
 ## **✨ Features**
 
