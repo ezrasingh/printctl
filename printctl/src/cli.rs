@@ -1,94 +1,50 @@
 use clap::{Parser, Subcommand};
+use std::net::IpAddr;
 use std::path::PathBuf;
+use uuid::Uuid;
 
 #[derive(Parser)]
-#[command(version, about, long_about = None)]
+#[command(version, about = "Print Agent Controller")]
 pub struct Cli {
     #[command(subcommand)]
-    pub command: Option<Command>,
+    pub command: Command,
 }
 
 #[derive(Subcommand)]
 pub enum Command {
-    /// Start user interface
+    /// Launch UI (TUI or Web)
     Ui {
-        /// Run web interface
-        #[arg(short = 'w', long = "web", action)]
+        /// Run Web UI instead of TUI
+        #[arg(short = 'w', long = "web")]
         use_web: bool,
 
-        /// The address the web server will bind to
-        #[arg(short, long, env = "PRINTCTL_WEB_UI_ADDR")]
-        addr: Option<std::net::IpAddr>,
+        /// Web UI bind address
+        #[arg(short, long, env = "PRINTCTL_WEB_ADDR")]
+        addr: Option<IpAddr>,
 
-        /// The port the web server will listen on
-        #[arg(short, long, env = "PRINTCTL_WEB_UI_PORT")]
+        /// Web UI port
+        #[arg(short, long, env = "PRINTCTL_WEB_PORT")]
         port: Option<u16>,
-
-        /// Specify a config file
-        #[arg(short, long = "config", env = "PRINTCTL_CONFIG")]
-        config_path: Option<PathBuf>,
     },
-    /// List available connections
-    List {
-        /// List connected devices
-        #[arg(short, long, action)]
-        devices: bool,
 
-        /// List connected machines
-        #[arg(short, long, action)]
-        machines: bool,
+    /// List detected serial devices
+    ListDevices,
+
+    /// Upload a G-code file
+    UploadGcode {
+        #[arg(value_name = "FILE")]
+        file: PathBuf,
     },
-    /// Submit print job
-    Print {
-        /// Specify machine ID
-        #[arg(short, long)]
-        machine_id: String,
 
-        /// Specify device name
+    /// Queue a print job
+    QueueJob {
         #[arg(short, long)]
-        device_name: String,
+        printer_id: Uuid,
 
-        /// Specify GCODE path
         #[arg(short, long)]
-        gcode_path: PathBuf,
+        gcode_id: Uuid,
     },
-    /// Connect to printer
-    Stream {
-        /// Specify machine ID
-        #[arg(short, long)]
-        machine_id: String,
 
-        /// Specify device name
-        #[arg(short, long)]
-        device_name: String,
-
-        #[arg(short, long, action)]
-        log: bool,
-    },
-    /// Start printctl server
-    Server {
-        /// The address the server will bind to
-        #[arg(short, long, env = "PRINTCTL_GRPC_ADDR")]
-        addr: Option<std::net::IpAddr>,
-
-        /// The port the server will listen on
-        #[arg(short, long, env = "PRINTCTL_GRPC_PORT")]
-        port: Option<u16>,
-
-        /// Specify a config file
-        #[arg(short, long = "config", env = "PRINTCTL_CONFIG")]
-        config_path: Option<PathBuf>,
-    },
-}
-
-use serde::Deserialize;
-
-use crate::ui;
-use printctl_node::{discovery, server};
-
-#[derive(Debug, Default, Deserialize)]
-pub struct PrintctlConfig {
-    pub discovery: Option<discovery::DiscoveryConfig>,
-    pub server: Option<server::ServerConfig>,
-    pub ui: Option<ui::UiConfig>,
+    /// Show job list
+    ListJobs,
 }

@@ -1,5 +1,5 @@
 [workspace]
 members = ["printctl", "printctl-*"]
 # Only check / build main crates by default (check all with `--workspace`)
-default-members = ["printctl", "printctl-node"]
+default-members = ["printctl", "printctl-ui"]
 resolver = "2"
