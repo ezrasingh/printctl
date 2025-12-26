@@ -1,5 +1,5 @@
 mod editor;
-mod simulator;
+mod emulation;
 
 pub use editor::*;
-pub use simulator::*;
+pub use emulation::*;
