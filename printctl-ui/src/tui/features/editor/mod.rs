@@ -1,7 +1,6 @@
 mod code;
-mod preview;
+mod debugger;
 mod script;
-mod stack;
 mod style;
 
 use ratatui_explorer::{FileExplorer, Theme};

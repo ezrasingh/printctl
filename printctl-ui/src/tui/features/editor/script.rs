@@ -1,40 +1,40 @@
 use std::path::PathBuf;
 
+use crate::tui::features::emulation::simulator::GCodeSimulator;
 use crate::tui::input::{AppEvent, EventHandler};
 
-use super::preview::GCodePreview;
-use super::stack::GCodeStack;
+use super::debugger::GCodeDebugger;
 
 #[derive(Debug)]
-pub struct GCodeScript(GCodeStack, GCodePreview);
+pub struct GCodeScript(GCodeSimulator, GCodeDebugger);
 
 impl GCodeScript {
     pub fn new(path: &PathBuf) -> Self {
         let src = std::fs::read_to_string(path).expect("Could not read GCode file");
-        Self(GCodeStack::new(&src), GCodePreview::new(&path, &src))
+        Self(GCodeSimulator::new(&src), GCodeDebugger::new(&path, &src))
     }
 }
 
 impl GCodeScript {
-    fn stack(&self) -> &GCodeStack {
+    fn simulator(&self) -> &GCodeSimulator {
         &self.0
     }
 
-    fn stack_mut(&mut self) -> &mut GCodeStack {
+    fn simulator_mut(&mut self) -> &mut GCodeSimulator {
         &mut self.0
     }
 
-    fn editor(&self) -> &GCodePreview {
+    fn editor(&self) -> &GCodeDebugger {
         &self.1
     }
 
-    fn editor_mut(&mut self) -> &mut GCodePreview {
+    fn editor_mut(&mut self) -> &mut GCodeDebugger {
         &mut self.1
     }
 }
 
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
-use ratatui::widgets::{Paragraph, Widget};
+use ratatui::widgets::Widget;
 
 impl GCodeScript {
     fn layout(area: Rect) -> [Rect; 2] {
@@ -60,9 +60,8 @@ impl GCodeScript {
 
 impl Widget for &GCodeScript {
     fn render(self, area: Rect, buf: &mut ratatui::prelude::Buffer) {
-        let stack = self.stack();
+        let simulator = self.simulator();
         let editor = self.editor();
-        let simulator = stack.simulator();
         let [editor_area, simulator_area] = GCodeScript::layout(area);
 
         editor.render(editor_area, buf);
@@ -77,8 +76,8 @@ impl EventHandler for GCodeScript {
         match key_event.code {
             KeyCode::Up => self.editor_mut().scroll_down(),
             KeyCode::Down => self.editor_mut().scroll_up(),
-            KeyCode::Left => self.stack_mut().rewind(),
-            KeyCode::Right => self.stack_mut().advance(),
+            KeyCode::Left => self.simulator_mut().stack_mut().rewind(),
+            KeyCode::Right => self.simulator_mut().stack_mut().advance(),
             _ => {}
         }
 

@@ -21,6 +21,18 @@ pub fn arg_style(is_selected: bool) -> Style {
 }
 
 #[inline]
+pub fn value_style(is_selected: bool) -> Style {
+    let base = Style::default();
+    if is_selected {
+        base.fg(Color::White)
+            .bg(Color::DarkGray)
+            .add_modifier(Modifier::BOLD)
+    } else {
+        base.fg(Color::LightYellow)
+    }
+}
+
+#[inline]
 pub fn comment_style(is_selected: bool) -> Style {
     let base = Style::default().fg(Color::DarkGray);
     if is_selected {
