@@ -1,0 +1,9 @@
+.env*
+.cargo/
+target/
+
+.gitignore
+.editorignore
+
+README.md
+CODE_OF_CONDUCT.md
