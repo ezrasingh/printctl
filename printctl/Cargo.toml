@@ -8,13 +8,15 @@ readme = "README.md"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-printctl-node = { path = "../printctl-node", version = "0.1.0" }
-tokio = { version = "1.44.1", features = ["macros", "rt-multi-thread"] }
-clap = { version = "4.5.32", features = ["derive", "env", "string"] }
+printctl-ui = { path = "../printctl-ui", version = "*" }
+tokio = { version = "1.48.0", features = ["full"] }
+clap = { version = "4.5.53", features = ["derive", "env", "string"] }
 serde = { version = "1.0.219", features = ["derive"] }
 config = "0.15.11"
-thiserror = "2.0.12"
-crossterm = "0.28.1"
-ratatui = { version = "0.29.0", features = ["all-widgets"] }
-color-eyre = "0.6.3"
-tui = "0.19.0"
+thiserror = "2.0.17"
+crossterm = "0.29.0"
+hostname = "0.4.2"
+tokio-serial = { version = "5.4.5", features = ["codec", "rt"] }
+uuid = { version = "1.19.0", features = ["v4"] }
+chrono = "0.4.42"
+unicode-segmentation = "1.12.0"

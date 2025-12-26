@@ -1,100 +1,68 @@
-mod cli;
 mod error;
 mod prelude;
-mod ui;
+
+mod agent;
+mod cli;
+mod printer;
 
 use crate::prelude::*;
-
-fn default_config(config_path: Option<std::path::PathBuf>) -> cli::PrintctlConfig {
-    use config::Config;
-    config_path
-        .map(|path| {
-            Config::builder()
-                .add_source(config::File::from(path))
-                .build()
-                .unwrap()
-                .try_deserialize()
-                .unwrap_or_default()
-        })
-        .unwrap_or_default()
-}
 
 #[tokio::main]
 async fn main() -> Result<()> {
     use clap::Parser;
+    use tokio::fs;
 
-    use crate::cli::Cli;
+    use agent::PrintAgent;
+    use cli::{Cli, Command};
 
-    let cmd = Cli::parse()
-        .command
-        .expect("Invalid command. Please try '--help' for more information.");
-    let cwd = std::env::current_dir()?;
+    let cli = Cli::parse();
+    let agent_name = hostname::get()?.into_string().unwrap_or("localhost".into());
+    let mut local_agent = PrintAgent::new(&agent_name);
 
-    match cmd {
-        cli::Command::Ui {
+    match cli.command {
+        Command::Ui {
             use_web,
             addr,
             port,
-            config_path,
         } => {
-            let ui_config = default_config(config_path).ui.unwrap_or_default();
-
-            if use_web || ui_config.use_web {
-                let default_port = ui_config.http_port.unwrap_or(8080);
-                let port = port.unwrap_or(default_port);
-                ui::web::start(port).expect("could not start web user interface");
+            if use_web {
+                let addr = addr.unwrap_or_else(|| "0.0.0.0".parse().unwrap());
+                let port = port.unwrap_or(8020);
+                printctl_ui::web::start(addr, port).expect("could not start web frontend");
             } else {
-                ui::tui::start().expect("could not start terminal user interface");
+                printctl_ui::tui::start().expect("could not start terminal frontend");
             }
         }
 
-        cli::Command::List { devices, machines } => {
-            use printctl_node::discovery;
-
-            println!("Starting discovery...");
-            let discovery_node = discovery::Node::default().start_discovery();
-            for peer in discovery_node.peers().await {
-                if machines || devices {
-                    println!("{:#?}", peer);
-                }
-            }
-            println!("Ending discovery...");
-            discovery_node.stop_discovery().await;
+        Command::ListDevices => {
+            let devices = local_agent
+                .available_devices()
+                .expect("Could not list devices");
+            println!("{:#?}", devices);
         }
 
-        cli::Command::Server {
-            addr,
-            port,
-            config_path,
+        Command::UploadGcode { file } => {
+            let bytes = fs::read(&file).await?;
+            let file_name = file.file_name().expect("Could not determine filename");
+
+            let id = local_agent.upload_gcode(file_name, bytes);
+            println!("Uploaded GCODE as ID {}", id);
+        }
+
+        Command::QueueJob {
+            printer_id,
+            gcode_id,
         } => {
-            use printctl_node::server::ServerConfig;
-
-            let config = default_config(config_path);
-            let (server_config, discovery_config) = (
-                config.server.unwrap_or_default(),
-                config.discovery.unwrap_or_default(),
-            );
-            let (addr, port) = (
-                addr.unwrap_or(*server_config.grpc_address()),
-                port.unwrap_or(*server_config.grpc_port()),
-            );
-
-            printctl_node::server::run(ServerConfig::new(addr, port), discovery_config)
-                .expect("could not start server");
+            let id = local_agent.create_job(printer_id, gcode_id);
+            println!("Queued job {}", id);
         }
 
-        cli::Command::Print {
-            machine_id,
-            device_name,
-            gcode_path,
-        } => todo!(),
-
-        cli::Command::Stream {
-            machine_id,
-            device_name,
-            log,
-        } => todo!(),
-    };
+        Command::ListJobs => {
+            for job in local_agent.list_jobs() {
+                println!("{:?}", job);
+            }
+        }
+    }
 
     Ok(())
 }

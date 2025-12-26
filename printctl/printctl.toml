@@ -1,4 +1,17 @@
 # All settings are optional; these are the default values.
+
+[usb]
+default_baud_rate = 25_000
+
+[device.Z8T]
+vendor_id = 4_292
+product_id = 60_000
+
+[device.LK5-Pro]
+vendor_id = 6_790
+product_id = 29_987
+baud_rate = 25_000  # optional
+
 [discovery]
 # Name of the printctl node, defaults to hostname
 name = "client"
