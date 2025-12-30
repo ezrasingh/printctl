@@ -1,19 +1,11 @@
-mod code;
-mod debugger;
-mod script;
-mod style;
-
 use ratatui_explorer::{FileExplorer, Theme};
 
-use crate::tui::components::layout::StackedLayout;
-use crate::tui::input::{AppEvent, EventHandler};
-
-pub use script::GCodeScript;
+use super::debugger::GCodeDebugger;
 
 #[derive(Debug)]
 pub struct GCodeEditor {
     file_explorer: FileExplorer,
-    selected_script: Option<GCodeScript>,
+    debugger: Option<GCodeDebugger>,
 }
 
 impl Default for GCodeEditor {
@@ -25,42 +17,46 @@ impl Default for GCodeEditor {
 
         Self {
             file_explorer,
-            selected_script: None,
+            debugger: None,
         }
     }
 }
 
 impl GCodeEditor {
     fn remove_file(&mut self) {
-        self.selected_script.take();
+        self.debugger.take();
     }
 
     fn select_current_file(&mut self) {
         let path = self.file_explorer.current().path();
         if let Some(ext) = path.extension() {
-            if matches!(ext.to_ascii_lowercase().to_str(), Some("gcode")) {
-                let script = GCodeScript::new(path);
-                self.selected_script.replace(script);
+            if ext.to_ascii_lowercase().to_str() == Some("gcode") {
+                self.debugger.replace(GCodeDebugger::new(path));
             }
         }
     }
 }
 
+use crossterm::event::{KeyCode, KeyEventKind};
 use ratatui::layout::Alignment;
 use ratatui::widgets::{Paragraph, Widget};
+use ratatui_explorer::Input as ExplorerInput;
+
+use crate::tui::components::layout::StackedLayout;
+use crate::tui::input::{AppEvent, EventHandler};
 
 impl Widget for &GCodeEditor {
     fn render(self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer) {
         let layout = StackedLayout::new();
-        match &self.selected_script {
+        match &self.debugger {
             None => layout
                 .header(Paragraph::new("Select GCode"))
                 .content(&self.file_explorer.widget())
                 .footer(Paragraph::new("[B] Go Back [Q] Quit").alignment(Alignment::Center))
                 .render(area, buf),
-            Some(script) => layout
+            Some(debugger) => layout
                 .header(Paragraph::new("[F] Choose File"))
-                .content(script)
+                .content(debugger)
                 .footer(
                     Paragraph::new("[B] Go Back [H] Help [Q] Quit").alignment(Alignment::Center),
                 )
@@ -68,9 +64,6 @@ impl Widget for &GCodeEditor {
         }
     }
 }
-
-use crossterm::event::{KeyCode, KeyEventKind};
-use ratatui_explorer::Input as ExplorerInput;
 
 impl Into<ExplorerInput> for AppEvent {
     fn into(self) -> ExplorerInput {
@@ -100,7 +93,7 @@ impl EventHandler for GCodeEditor {
         match key_event.code {
             KeyCode::Char('F') | KeyCode::Char('f') => self.remove_file(),
             KeyCode::Enter => {
-                if self.selected_script.is_none() {
+                if self.debugger.is_none() {
                     self.select_current_file();
                 }
             }
@@ -122,7 +115,7 @@ impl EventHandler for GCodeEditor {
             }
         }
 
-        match &mut self.selected_script {
+        match &mut self.debugger {
             Some(script) => script.handle_app_event(app_event, app_emitter),
             None => {
                 self.file_explorer.handle(app_event)?;

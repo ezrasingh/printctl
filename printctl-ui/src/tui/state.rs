@@ -1,12 +1,12 @@
 use std::sync::mpsc;
 
-use super::features;
+use super::features::editor::GCodeEditor;
 use super::input::{AppEvent, EventHandler};
 
 #[derive(Debug)]
 pub enum AppState {
     Home,
-    GcodeWorkbench(features::GCodeEditor),
+    GcodeWorkbench(GCodeEditor),
 }
 
 impl Default for AppState {
@@ -18,8 +18,8 @@ impl Default for AppState {
 use super::components::layout::{Modal, StackedLayout};
 
 impl AppState {
-    fn open_gcode_editor() -> AppEvent {
-        let editor = features::GCodeEditor::default();
+    fn open_gcode_workbech() -> AppEvent {
+        let editor = GCodeEditor::default();
         AppEvent::SetState(Self::GcodeWorkbench(editor))
     }
 
@@ -53,7 +53,7 @@ impl EventHandler for AppState {
     fn handle_key_event(&mut self, key_event: &crossterm::event::KeyEvent) -> Option<AppEvent> {
         match self {
             AppState::Home => match key_event.code {
-                KeyCode::Char('G') | KeyCode::Char('g') => Self::open_gcode_editor().into(),
+                KeyCode::Char('G') | KeyCode::Char('g') => Self::open_gcode_workbech().into(),
                 _ => None,
             },
             _ => None,
